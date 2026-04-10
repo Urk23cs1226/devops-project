@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # ─── FastAPI Application ────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: healthguard-app
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=healthcare_db
+      - MODEL_PATH=app/ml/model.joblib
+      - PORT=8000
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - healthguard-net
+
+  # ─── MongoDB Database ──────────────────────────────────
+  mongodb:
+    image: mongo:7.0
+    container_name: healthguard-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - healthguard-net
+
+volumes:
+  mongo_data:
+    driver: local
+
+networks:
+  healthguard-net:
+    driver: bridge

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HealthGuard AI Dashboard — View prediction history, statistics, and disease distribution analytics.">
+    <title>HealthGuard AI — Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🛡️</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+
+        <!-- Navigation -->
+        <nav class="navbar" id="main-nav">
+            <div class="navbar-brand">
+                <div class="navbar-logo">🛡️</div>
+                <div>
+                    <div class="navbar-title">HealthGuard AI</div>
+                    <div class="navbar-subtitle">Analytics Dashboard</div>
+                </div>
+            </div>
+            <div class="navbar-links">
+                <a href="/" class="nav-link" id="nav-chat">💬 Chat</a>
+                <a href="/dashboard" class="nav-link active" id="nav-dashboard">📊 Dashboard</a>
+            </div>
+        </nav>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-wrapper">
+
+            <div class="dashboard-header">
+                <h1>📊 Prediction Analytics</h1>
+                <p>Monitor AI predictions, trends, and health insights</p>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Predictions</div>
+                    <div class="stat-value" id="stat-total">—</div>
+                    <div class="stat-change" id="stat-recent">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg Confidence</div>
+                    <div class="stat-value" id="stat-confidence">—</div>
+                    <div class="stat-change">Model accuracy score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Top Condition</div>
+                    <div class="stat-value" id="stat-top-disease" style="font-size: 1.25rem;">—</div>
+                    <div class="stat-change" id="stat-top-count">Most predicted</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Last 24 Hours</div>
+                    <div class="stat-value" id="stat-24h">—</div>
+                    <div class="stat-change">Recent activity</div>
+                </div>
+            </div>
+
+            <!-- Charts & History -->
+            <div class="dashboard-grid">
+
+                <!-- Disease Distribution Chart -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">🏥 Disease Distribution</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="disease-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Diseases List -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">🔝 Top Predicted Diseases</h3>
+                    </div>
+                    <div id="top-diseases-list">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <p>No data yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prediction History Table -->
+                <div class="panel history-table-container">
+                    <div class="panel-header">
+                        <h3 class="panel-title">📜 Prediction History</h3>
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" class="search-input" id="search-input" placeholder="Search by disease name...">
+                    </div>
+                    <div id="history-content">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Disease</th>
+                                    <th>Confidence</th>
+                                    <th>Symptoms</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                        Loading predictions...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination" id="pagination"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
