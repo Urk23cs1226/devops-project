@@ -52,8 +52,11 @@ jobs:
       run: pip install ansible
 
 
-    - name: Start Minikube
+    - name: Start Minikube on Docker
       uses: medyagh/setup-minikube@latest
+      with:
+        driver: docker
+        kubernetes-version: v1.31.0
 
 
     - name: Verify Kubernetes Cluster
