@@ -52,5 +52,35 @@ jobs:
       run: pip install ansible
 
 
+    - name: Start Minikube
+      uses: medyagh/setup-minikube@latest
+
+
+    - name: Verify Kubernetes Cluster
+      run: |
+        kubectl cluster-info
+        kubectl get nodes
+
+
+    - name: Update Kubernetes Deployment Image
+      run: |
+        DOCKER_USER=$(echo "${{ secrets.DOCKER_USERNAME }}" | tr -d '[:space:]')
+        sed -i "s|YOUR_DOCKERHUB_USERNAME/healthguard-ai:latest|${DOCKER_USER}/${{ env.DOCKER_IMAGE }}:latest|g" k8s/deployment.yaml
+        echo "Updated image in deployment.yaml:"
+        grep "image:" k8s/deployment.yaml
+
+
     - name: Deploy using Ansible
-      run: ansible-playbook ansible/deploy.yml
+      run: ansible-playbook ansible/deploy.yml -i ansible/inventory.ini
+
+
+    - name: Verify Kubernetes Deployment
+      run: |
+        echo "========== PODS =========="
+        kubectl get pods
+        echo ""
+        echo "========== DEPLOYMENTS =========="
+        kubectl get deployments
+        echo ""
+        echo "========== SERVICES =========="
+        kubectl get services
