@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  DOCKER_IMAGE: symptom-app
+
 jobs:
   build-and-deploy:
 
@@ -34,11 +37,15 @@ jobs:
 
 
     - name: Build Docker Image
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/symptom-app .
+      run: |
+        DOCKER_USER=$(echo "${{ secrets.DOCKER_USERNAME }}" | tr -d '[:space:]')
+        docker build -t "${DOCKER_USER}/${{ env.DOCKER_IMAGE }}" .
 
 
     - name: Push Docker Image
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/symptom-app
+      run: |
+        DOCKER_USER=$(echo "${{ secrets.DOCKER_USERNAME }}" | tr -d '[:space:]')
+        docker push "${DOCKER_USER}/${{ env.DOCKER_IMAGE }}"
 
 
     - name: Install Ansible
