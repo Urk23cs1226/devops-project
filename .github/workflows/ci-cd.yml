@@ -2,9 +2,9 @@ name: HealthGuard AI — CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 env:
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/healthguard-ai

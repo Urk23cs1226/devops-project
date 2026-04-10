@@ -1,0 +1,74 @@
+# ──────────────────────────────────────────────────────────
+# HealthGuard AI — Kubernetes Deployment
+# ──────────────────────────────────────────────────────────
+# Deploys the HealthGuard AI application with:
+#   • 2 replicas for high availability
+#   • Rolling update strategy (zero-downtime deploys)
+#   • Health checks via liveness/readiness probes
+#   • Resource limits to prevent noisy-neighbor issues
+# ──────────────────────────────────────────────────────────
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthguard-ai
+  labels:
+    app: healthguard-ai
+    version: "1.0.0"
+    environment: production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: healthguard-ai
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: healthguard-ai
+        version: "1.0.0"
+    spec:
+      containers:
+        - name: healthguard-ai
+          image: YOUR_DOCKERHUB_USERNAME/healthguard-ai:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://mongodb-service:27017"
+            - name: DATABASE_NAME
+              value: "healthcare_db"
+            - name: MODEL_PATH
+              value: "app/ml/model.joblib"
+            - name: PORT
+              value: "8000"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      restartPolicy: Always

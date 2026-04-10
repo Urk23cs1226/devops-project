@@ -6,7 +6,7 @@ import numpy as np
 import joblib
 from typing import List, Tuple
 from app.config import get_settings
-
+from app.ml.medicine_map import DISEASE_MEDICINE_MAP
 
 class MLService:
     """Handles ML model loading, inference, and symptom matching."""
@@ -95,6 +95,7 @@ class MLService:
             })
 
         primary = top_predictions[0]
+        recommended = DISEASE_MEDICINE_MAP.get(primary["disease"], ["Consult a healthcare professional"])
 
         return {
             "disease": primary["disease"],
@@ -102,6 +103,7 @@ class MLService:
             "top_predictions": top_predictions[:3],
             "symptoms_used": symptoms,
             "symptoms_matched": matched_symptoms,
+            "recommended_medicines": recommended,
         }
 
     def get_symptom_list(self) -> List[str]:

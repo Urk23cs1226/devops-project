@@ -988,3 +988,37 @@ a:hover {
         font-size: 0.8rem;
     }
 }
+
+
+/* Added Language Selector & Medicine UI Styles */
+.lang-selector {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    padding: 0.4rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.lang-selector:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+.medicine-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.medicine-chip {
+    background: rgba(30, 215, 96, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(30, 215, 96, 0.3);
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}

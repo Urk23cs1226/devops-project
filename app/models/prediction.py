@@ -14,6 +14,10 @@ class SymptomInput(BaseModel):
         description="List of symptom names",
         json_schema_extra={"example": ["headache", "fever", "fatigue"]}
     )
+    language: str = Field(
+        default="en",
+        description="Target language code for the response (e.g., 'es', 'hi', 'ta', 'fr', 'en')"
+    )
 
 
 class TopPrediction(BaseModel):
@@ -29,6 +33,7 @@ class PredictionResponse(BaseModel):
     top_predictions: List[TopPrediction]
     symptoms_used: List[str]
     symptoms_matched: List[str]
+    recommended_medicines: List[str] = []
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     disclaimer: str = (
         "⚠️ This prediction is for educational/demo purposes only. "
@@ -43,6 +48,7 @@ class PredictionHistory(BaseModel):
     confidence: float
     symptoms: List[str]
     top_predictions: List[TopPrediction]
+    recommended_medicines: List[str] = []
     timestamp: datetime
 
 

@@ -50,6 +50,7 @@ class DatabaseService:
             "symptoms": prediction_data["symptoms_used"],
             "symptoms_matched": prediction_data["symptoms_matched"],
             "top_predictions": prediction_data["top_predictions"],
+            "recommended_medicines": prediction_data.get("recommended_medicines", []),
             "timestamp": datetime.utcnow(),
         }
 
@@ -83,6 +84,7 @@ class DatabaseService:
                 "confidence": doc["confidence"],
                 "symptoms": doc.get("symptoms", []),
                 "top_predictions": doc.get("top_predictions", []),
+                "recommended_medicines": doc.get("recommended_medicines", []),
                 "timestamp": doc["timestamp"].isoformat(),
             })
 

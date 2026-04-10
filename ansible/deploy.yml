@@ -1,0 +1,131 @@
+# ──────────────────────────────────────────────────────────
+# HealthGuard AI — Ansible Deployment Playbook
+# ──────────────────────────────────────────────────────────
+# Automates Kubernetes deployment of the HealthGuard AI app.
+#
+# Usage:
+#   ansible-playbook ansible/deploy.yml
+#   ansible-playbook ansible/deploy.yml -e "docker_image=myuser/healthguard-ai:v2"
+# ──────────────────────────────────────────────────────────
+
+---
+- name: Deploy HealthGuard AI to Kubernetes
+  hosts: local
+  connection: local
+  gather_facts: false
+
+  vars:
+    docker_image: "YOUR_DOCKERHUB_USERNAME/healthguard-ai:latest"
+    k8s_manifests_dir: "{{ playbook_dir }}/../k8s"
+    app_name: "healthguard-ai"
+    namespace: "default"
+
+  tasks:
+    # ─── Pre-flight Checks ───────────────────────────────
+    - name: Verify kubectl is available
+      command: kubectl version --client --short
+      register: kubectl_version
+      changed_when: false
+      ignore_errors: false
+
+    - name: Display kubectl version
+      debug:
+        msg: "kubectl version: {{ kubectl_version.stdout }}"
+
+    - name: Verify cluster connectivity
+      command: kubectl cluster-info
+      register: cluster_info
+      changed_when: false
+      ignore_errors: false
+
+    - name: Display cluster info
+      debug:
+        msg: "{{ cluster_info.stdout_lines | first }}"
+
+    # ─── Deploy Kubernetes Manifests ─────────────────────
+    - name: Apply Kubernetes Deployment
+      command: >
+        kubectl apply -f {{ k8s_manifests_dir }}/deployment.yaml
+        --namespace={{ namespace }}
+      register: deploy_result
+
+    - name: Display deployment result
+      debug:
+        msg: "{{ deploy_result.stdout }}"
+
+    - name: Apply Kubernetes Service
+      command: >
+        kubectl apply -f {{ k8s_manifests_dir }}/service.yaml
+        --namespace={{ namespace }}
+      register: service_result
+
+    - name: Display service result
+      debug:
+        msg: "{{ service_result.stdout }}"
+
+    # ─── Rolling Restart (pick up new image) ─────────────
+    - name: Trigger rolling restart of deployment
+      command: >
+        kubectl rollout restart deployment/{{ app_name }}
+        --namespace={{ namespace }}
+      register: restart_result
+
+    - name: Display restart result
+      debug:
+        msg: "{{ restart_result.stdout }}"
+
+    # ─── Wait for Rollout ────────────────────────────────
+    - name: Wait for rollout to complete
+      command: >
+        kubectl rollout status deployment/{{ app_name }}
+        --namespace={{ namespace }}
+        --timeout=120s
+      register: rollout_status
+
+    - name: Display rollout status
+      debug:
+        msg: "{{ rollout_status.stdout }}"
+
+    # ─── Verification ────────────────────────────────────
+    - name: Get pod status
+      command: kubectl get pods -l app={{ app_name }} --namespace={{ namespace }} -o wide
+      register: pods_info
+      changed_when: false
+
+    - name: Display running pods
+      debug:
+        msg: "{{ pods_info.stdout_lines }}"
+
+    - name: Get deployment status
+      command: kubectl get deployments --namespace={{ namespace }} -o wide
+      register: deploy_info
+      changed_when: false
+
+    - name: Display deployments
+      debug:
+        msg: "{{ deploy_info.stdout_lines }}"
+
+    - name: Get service status
+      command: kubectl get services --namespace={{ namespace }} -o wide
+      register: svc_info
+      changed_when: false
+
+    - name: Display services
+      debug:
+        msg: "{{ svc_info.stdout_lines }}"
+
+    # ─── Summary ─────────────────────────────────────────
+    - name: Deployment summary
+      debug:
+        msg: |
+          ═══════════════════════════════════════════════════
+           ✅ HealthGuard AI Deployment Complete!
+          ═══════════════════════════════════════════════════
+           App:       {{ app_name }}
+           Image:     {{ docker_image }}
+           Namespace: {{ namespace }}
+           Service:   NodePort 30080
+          ═══════════════════════════════════════════════════
+           Access:    http://<NODE_IP>:30080
+           Health:    http://<NODE_IP>:30080/api/health
+          ═══════════════════════════════════════════════════

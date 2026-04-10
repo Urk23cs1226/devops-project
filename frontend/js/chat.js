@@ -23,11 +23,20 @@ const selectedSymptomsContainer = document.getElementById('selected-symptoms');
 document.addEventListener('DOMContentLoaded', () => {
     loadSymptoms();
     setupEventListeners();
+    
+    // Listen for language changes
+    const langSelect = document.getElementById('language-selector');
+    if(langSelect) {
+        langSelect.addEventListener('change', () => {
+             loadSymptoms();
+        });
+    }
 });
 
 async function loadSymptoms() {
     try {
-        const res = await fetch('/api/symptoms');
+        const lang = document.getElementById('language-selector') ? document.getElementById('language-selector').value : 'en';
+        const res = await fetch(`/api/symptoms?language=${lang}`);
         const data = await res.json();
         allSymptoms = data.symptoms || [];
     } catch (err) {
@@ -264,10 +273,11 @@ async function sendSymptoms() {
     addTypingIndicator();
 
     try {
+        const lang = document.getElementById('language-selector') ? document.getElementById('language-selector').value : 'en';
         const res = await fetch('/api/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ symptoms })
+            body: JSON.stringify({ symptoms, language: lang })
         });
 
         removeTypingIndicator();
@@ -298,6 +308,17 @@ function showPredictionResult(data) {
     const confClass = data.confidence >= 70 ? 'conf-high' :
                       data.confidence >= 40 ? 'conf-medium' : 'conf-low';
 
+    let medsHTML = '';
+    if (data.recommended_medicines && data.recommended_medicines.length > 0) {
+        const medPills = data.recommended_medicines.map(m => `<div class="medicine-chip">💊 ${m}</div>`).join('');
+        medsHTML = `
+            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+                <h4 style="font-size: 0.8rem; color: #4ade80; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.4rem;">Recommended OTC Relief</h4>
+                <div class="medicine-chips">${medPills}</div>
+            </div>
+        `;
+    }
+
     const html = `
         Based on your symptoms, here's my analysis:
 
@@ -320,6 +341,8 @@ function showPredictionResult(data) {
                 <h4>Other Possible Conditions</h4>
                 ${topPredictionsHTML}
             </div>
+
+            ${medsHTML}
 
             <div style="margin-top: 0.75rem;">
                 <h4 style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.4rem;">Symptoms Matched</h4>
