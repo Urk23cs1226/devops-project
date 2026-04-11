@@ -1,26 +1,17 @@
 ---
 - name: Deploy HealthGuard AI to Kubernetes
-  hosts: webservers
+  hosts: local
+  connection: local
   gather_facts: false
 
   vars:
-    k8s_manifests_dir: "/home/ubuntu/k8s"
+    k8s_manifests_dir: "{{ playbook_dir }}/../k8s"
     app_name: "healthguard-ai"
     namespace: "default"
 
   tasks:
-    - name: Ensure K8s manifests directory exists on remote
-      file:
-        path: "{{ k8s_manifests_dir }}"
-        state: directory
-
-    - name: Copy K8s manifests to remote server
-      copy:
-        src: "{{ playbook_dir }}/../k8s/"
-        dest: "{{ k8s_manifests_dir }}/"
-
     - name: Verify kubectl is available
-      command: k3s kubectl version --client
+      command: kubectl version --client
       register: kubectl_version
       changed_when: false
 
@@ -30,7 +21,7 @@
 
     - name: Apply Kubernetes Deployment
       command: >
-        k3s kubectl apply -f {{ k8s_manifests_dir }}/deployment.yaml
+        kubectl apply -f {{ k8s_manifests_dir }}/deployment.yaml
         --namespace={{ namespace }}
       register: deploy_result
 
@@ -40,7 +31,7 @@
 
     - name: Apply Kubernetes Service
       command: >
-        k3s kubectl apply -f {{ k8s_manifests_dir }}/service.yaml
+        kubectl apply -f {{ k8s_manifests_dir }}/service.yaml
         --namespace={{ namespace }}
       register: service_result
 
@@ -50,7 +41,7 @@
 
     - name: Trigger rolling restart of deployment
       command: >
-        k3s kubectl rollout restart deployment/{{ app_name }}
+        kubectl rollout restart deployment/{{ app_name }}
         --namespace={{ namespace }}
       register: restart_result
 
@@ -60,7 +51,7 @@
 
     - name: Wait for rollout to complete
       command: >
-        k3s kubectl rollout status deployment/{{ app_name }}
+        kubectl rollout status deployment/{{ app_name }}
         --namespace={{ namespace }}
         --timeout=120s
       register: rollout_status
@@ -70,7 +61,7 @@
         msg: "{{ rollout_status.stdout }}"
 
     - name: Get pod status
-      command: k3s kubectl get pods -l app={{ app_name }} --namespace={{ namespace }}
+      command: kubectl get pods -l app={{ app_name }} --namespace={{ namespace }}
       register: pods_info
       changed_when: false
 
@@ -79,7 +70,7 @@
         msg: "{{ pods_info.stdout_lines }}"
 
     - name: Get deployment status
-      command: k3s kubectl get deployments --namespace={{ namespace }}
+      command: kubectl get deployments --namespace={{ namespace }}
       register: deploy_info
       changed_when: false
 
@@ -88,7 +79,7 @@
         msg: "{{ deploy_info.stdout_lines }}"
 
     - name: Get service status
-      command: k3s kubectl get services --namespace={{ namespace }}
+      command: kubectl get services --namespace={{ namespace }}
       register: svc_info
       changed_when: false
 
