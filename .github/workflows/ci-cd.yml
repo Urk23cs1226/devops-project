@@ -52,17 +52,44 @@ jobs:
       run: pip install ansible
 
 
-    - name: Start Minikube on Docker
-      uses: medyagh/setup-minikube@latest
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
       with:
-        driver: docker
-        kubernetes-version: v1.31.0
+        terraform_wrapper: false
 
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
-    - name: Verify Kubernetes Cluster
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./terraform
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      working-directory: ./terraform
+
+    - name: Get EC2 IP Address
+      id: get_ip
       run: |
-        kubectl cluster-info
-        kubectl get nodes
+        EC2_IP=$(terraform output -raw instance_public_ip)
+        echo "EC2_IP_ADDRESS=$EC2_IP" >> $GITHUB_ENV
+      working-directory: ./terraform
+
+    - name: Configure SSH Key
+      run: |
+        mkdir -p ~/.ssh/
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
+    - name: Setup Ansible Inventory
+      run: |
+        echo "[webservers]" > ansible/inventory.ini
+        echo "app_server ansible_host=${{ env.EC2_IP_ADDRESS }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> ansible/inventory.ini
+        cat ansible/inventory.ini
 
 
     - name: Update Kubernetes Deployment Image
@@ -73,17 +100,12 @@ jobs:
         grep "image:" k8s/deployment.yaml
 
 
+    - name: Provision EC2 with K3s
+      run: ansible-playbook ansible/provision.yml -i ansible/inventory.ini
+      env:
+        ANSIBLE_HOST_KEY_CHECKING: "False"
+
     - name: Deploy using Ansible
       run: ansible-playbook ansible/deploy.yml -i ansible/inventory.ini
-
-
-    - name: Verify Kubernetes Deployment
-      run: |
-        echo "========== PODS =========="
-        kubectl get pods
-        echo ""
-        echo "========== DEPLOYMENTS =========="
-        kubectl get deployments
-        echo ""
-        echo "========== SERVICES =========="
-        kubectl get services
+      env:
+        ANSIBLE_HOST_KEY_CHECKING: "False"

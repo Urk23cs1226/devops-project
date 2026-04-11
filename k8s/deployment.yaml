@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
         - name: healthguard-ai
-          image: YOUR_DOCKERHUB_USERNAME/healthguard-ai:latest
+          image: ragunathmathi/healthguard-ai:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
